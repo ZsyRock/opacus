@@ -369,10 +369,13 @@ class PrivacyEngine:
                 unchanged. Technically this doesn't fit the assumptions made by
                 privacy accounting mechanism, but it can be a good approximation when
                 using Poisson sampling is unfeasible.
-            clipping: Per sample gradient clipping mechanism ("flat" or "per_layer" or "adaptive").
+            clipping: Per sample gradient clipping mechanism
+                ("flat" or "per_layer" or "adaptive" or "slaclip").
                 Flat clipping calculates the norm of the entire gradient over
                 all parameters, per layer clipping sets individual norms for
-                every parameter tensor, and adaptive clipping updates clipping bound per iteration.
+                every parameter tensor, adaptive clipping updates clipping bound per iteration,
+                and SlaClip augments the same Gaussian release with slack coordinates to
+                adapt the clipping threshold without introducing an extra privacy query.
                 Flat clipping is usually preferred, but using per layer clipping in combination
                 with distributed training can provide notable performance gains.
             noise_generator: torch.Generator() object used as a source of randomness for
@@ -383,6 +386,10 @@ class PrivacyEngine:
                 details
             rand_on_empty: Indicates to return a batch containing random numbers when encountering
                 empty batches samples with Poisson sampling rather than tensors with zero-length batch dimensions
+            **kwargs: Additional keyword arguments forwarded to the selected DP
+                optimizer. For ``clipping="slaclip"``, this includes ``num_slots``,
+                ``eta``, and optional ``beta``, ``c_min``, ``c_max``, and
+                ``strict_paper_check``.
 
         Returns:
             Tuple of (hooks_or_module, optimizer, data_loader) or (hooks_or_module, optimizer, criterion, data_loader).
@@ -533,10 +540,13 @@ class PrivacyEngine:
                 unchanged. Technically this doesn't fit the assumptions made by
                 privacy accounting mechanism, but it can be a good approximation when
                 using Poisson sampling is unfeasible.
-            clipping: Per sample gradient clipping mechanism ("flat" or "per_layer" or "adaptive").
+            clipping: Per sample gradient clipping mechanism
+                ("flat" or "per_layer" or "adaptive" or "slaclip").
                 Flat clipping calculates the norm of the entire gradient over
                 all parameters, per layer clipping sets individual norms for
-                every parameter tensor, and adaptive clipping updates clipping bound per iteration.
+                every parameter tensor, adaptive clipping updates clipping bound per iteration,
+                and SlaClip augments the same Gaussian release with slack coordinates to
+                adapt the clipping threshold without introducing an extra privacy query.
                 Flat clipping is usually preferred, but using per layer clipping in combination
                 with distributed training can provide notable performance gains.
             noise_generator: torch.Generator() object used as a source of randomness for
@@ -545,6 +555,10 @@ class PrivacyEngine:
                 implementation class for the wrapped ``module``. See
                 :class:`~opacus.grad_sample.gsm_base.AbstractGradSampleModule` for more
                 details
+            **kwargs: Additional keyword arguments forwarded to the selected DP
+                optimizer. For ``clipping="slaclip"``, this includes ``num_slots``,
+                ``eta``, and optional ``beta``, ``c_min``, ``c_max``, and
+                ``strict_paper_check``.
             wrap_model: If True (default), wraps module in GradSampleModule.
                 If False, uses non-wrapping mode - attaches hooks directly to the provided model
                 without wrapping. The original model remains unchanged and can be used normally.
